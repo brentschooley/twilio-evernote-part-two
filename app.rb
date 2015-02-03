@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'twilio-ruby'
-require "evernote_oauth"
+require 'evernote_oauth'
+require 'pp'
 
 def dev_token
   @dev_token ||= 'S=s1:U=90484:E=1528ed06b55:C=14b371f3ca8:P=1cd:A=en-devtoken:V=2:H=2e311c0746d91e1cafdc0d573d3b7a48'
@@ -18,7 +19,7 @@ def notebooks
   @notebooks ||= note_store.listNotebooks(dev_token)
 end
 
-def make_note(note_store, note_title, note_body, notebook_name)
+def make_note(note_store, note_title, note_text, notebook_name)
   notebook_guid = ''
 
   if notebooks.any? {|notebook| notebook.name == notebook_name }
@@ -33,14 +34,18 @@ def make_note(note_store, note_title, note_body, notebook_name)
     notebook_guid = new_notebook.guid
   end
 
+  #pp "Note Body: #{note_body}"
+
   note_body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   note_body += "<!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\">"
-  note_body += "<en-note>#{note_body}</en-note>"
+  note_body += "<en-note>#{note_text}</en-note>"
+
+  pp note_body
 
   # Create note object
   new_note = Evernote::EDAM::Type::Note.new
   new_note.title = note_title
-  new_note.content = n_body
+  new_note.content = note_body
   new_note.notebookGuid = notebook_guid
 
   # Attempt to create note in Evernote account
@@ -52,8 +57,15 @@ def make_note(note_store, note_title, note_body, notebook_name)
     ## http://dev.evernote.com/documentation/reference/Errors.html#Enum_EDAMErrorCode
     pp "EDAMUserException: #{edue}"
     pp edue.errorCode
+    pp edue.parameter
   rescue Evernote::EDAM::Error::EDAMNotFoundException => ednfe
     ## Parent Notebook GUID doesn't correspond to an actual notebook
     pp "EDAMNotFoundException: Invalid parent notebook GUID"
   end
+end
+
+post '/message' do
+  message = params[:Body]
+
+  make_note note_store, 'From SMS', message, "From Evernote-Twilio"
 end
