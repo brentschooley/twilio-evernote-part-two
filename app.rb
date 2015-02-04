@@ -4,11 +4,15 @@ require 'evernote_oauth'
 require 'pp'
 
 def dev_token
-  @dev_token ||= 'S=s1:U=90484:E=1528ed06b55:C=14b371f3ca8:P=1cd:A=en-devtoken:V=2:H=2e311c0746d91e1cafdc0d573d3b7a48'
+  # Pull dev token from environment
+  @dev_token ||= ENV['EVERNOTE_DEV_TOKEN']
 end
 
 def client
-  @client ||= EvernoteOAuth::Client.new(token: dev_token, sandbox: true)
+  @client ||= EvernoteOAuth::Client.new(
+    token: dev_token,
+    sandbox: true
+  )
 end
 
 def note_store
@@ -20,12 +24,25 @@ def notebooks
 end
 
 def make_note(note_store, note_title, note_text, notebook_name)
-  notebook_guid = ''
+  notebook_guid = find_or_create_notebook(notebook_name)
 
+  note_body = generate_note_body(note_text)
+
+  # Create note object
+  new_note = Evernote::EDAM::Type::Note.new(
+    title: note_title,
+    content: note_body,
+    notebookGuid: notebook_guid
+  )
+
+  create_note(new_note)
+end
+
+def find_or_create_notebook(notebook_name)
   if notebooks.any? {|notebook| notebook.name == notebook_name }
     # Notebook exists, get the notebook GUID
-    twilio_notebook = notebooks.find { |nb| nb.name == notebook_name }
-    notebook_guid = twilio_notebook.guid
+    notebook = notebooks.find { |nb| nb.name == notebook_name }
+    notebook_guid = notebook.guid
   else
     # Create notebook and store GUID
     notebook = Evernote::EDAM::Type::Notebook.new()
@@ -33,21 +50,15 @@ def make_note(note_store, note_title, note_text, notebook_name)
     new_notebook = note_store.createNotebook(dev_token, notebook)
     notebook_guid = new_notebook.guid
   end
+end
 
-  #pp "Note Body: #{note_body}"
-
+def generate_note_body(note_text)
   note_body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   note_body += "<!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\">"
   note_body += "<en-note>#{note_text}</en-note>"
+end
 
-  pp note_body
-
-  # Create note object
-  new_note = Evernote::EDAM::Type::Note.new
-  new_note.title = note_title
-  new_note.content = note_body
-  new_note.notebookGuid = notebook_guid
-
+def create_note(new_note)
   # Attempt to create note in Evernote account
   begin
     note = note_store.createNote(new_note)
