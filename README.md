@@ -1,5 +1,7 @@
 # Note Taking On The Go With Twilio and the Evernote API
 
+![Twilio + Evernote = ♥](http://cl.ly/image/3R3r452L3C08/twilio_plus_evernote.png)
+
 This is the code repo for a blog post on how your can Twilio and the Evernote API to allow you to create a note in Evernote from a text message. I highly encourage you to walk through the entire tutorial to get this software up-and-running on a server of your choice.
 
 If you have any questions or run into a problem, please feel free to file an issue. 
