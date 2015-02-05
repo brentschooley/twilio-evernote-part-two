@@ -20,8 +20,9 @@ The blog post that accompanies this repo describes how to set up the developer k
 
 If you want to jump right into using this right now, use the Heroku Button below:
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
-Now you can send an SMS to your Twilio number and a note will be created in your Evernote Sandbox account with the text from the SMS!
+Just point your Twilio number's Messaging URL to `http://yourhost:PORT/message` and then any SMS sent to that number will result in a note being created in your Evernote Sandbox account.
 
 ## Installation
 
