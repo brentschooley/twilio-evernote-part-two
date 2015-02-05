@@ -12,6 +12,6 @@
   "env": {
     "LANG": "en_US.UTF-8",
     "RACK_ENV": "production",
-    "EVERNOTE_DEV_TOKEN": "",
+    "EVERNOTE_DEV_TOKEN": ""
   }
 }
