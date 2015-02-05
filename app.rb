@@ -42,13 +42,13 @@ def find_or_create_notebook(notebook_name)
   if notebooks.any? {|notebook| notebook.name == notebook_name }
     # Notebook exists, get the notebook GUID
     notebook = notebooks.find { |nb| nb.name == notebook_name }
-    notebook_guid = notebook.guid
+    notebook.guid
   else
     # Create notebook and store GUID
     notebook = Evernote::EDAM::Type::Notebook.new()
     notebook.name = notebook_name
     new_notebook = note_store.createNotebook(dev_token, notebook)
-    notebook_guid = new_notebook.guid
+    new_notebook.guid
   end
 end
 
