@@ -82,11 +82,10 @@ def create_note(new_note)
 end
 
 def download_file(file_url)
-  File.open('tempfile', 'wb') do |fo|
+  File.open('tempfile', 'w+b') do |fo|
     fo.write open(file_url).read
+    fo.read
   end
-
-  File.open('tempfile', "rb") { |io| io.read };
 end
 
 post '/message' do
