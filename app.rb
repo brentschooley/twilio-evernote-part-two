@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'twilio-ruby'
 require 'evernote_oauth'
+require 'open-uri'
+require 'openssl'
 require 'pp'
 
 def dev_token
@@ -23,17 +25,19 @@ def notebooks
   @notebooks ||= note_store.listNotebooks(dev_token)
 end
 
-def make_note(note_store, note_title, note_text, notebook_name)
+def make_note(note_store, note_title, note_text, resource, mime_type, notebook_name)
   notebook_guid = find_or_create_notebook(notebook_name)
-
-  note_body = generate_note_body(note_text)
 
   # Create note object
   new_note = Evernote::EDAM::Type::Note.new(
     title: note_title,
-    content: note_body,
     notebookGuid: notebook_guid
   )
+
+  hexdigest = new_note.add_resource('Attachment', resource, mime_type) if resource
+  note_body = generate_note_body(note_text, hexdigest, mime_type)
+
+  new_note.content = note_body
 
   create_note(new_note)
 end
@@ -52,10 +56,12 @@ def find_or_create_notebook(notebook_name)
   end
 end
 
-def generate_note_body(note_text)
+def generate_note_body(note_text, resource_hexdigest, mime_type)
   note_body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   note_body += "<!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\">"
-  note_body += "<en-note>#{note_text}</en-note>"
+  note_body += "<en-note>#{note_text} "
+  note_body += "<en-media type='#{mime_type}' hash='#{resource_hexdigest}'/>" if resource_hexdigest
+  note_body += "</en-note>"
 end
 
 def create_note(new_note)
@@ -75,8 +81,30 @@ def create_note(new_note)
   end
 end
 
-post '/message' do
-  message = params[:Body]
+def download_file(file_url)
+  File.open('tempfile', 'wb') do |fo|
+    fo.write open(file_url).read
+  end
 
-  make_note note_store, 'From SMS', message, "From Evernote-Twilio"
+  File.open('tempfile', "rb") { |io| io.read };
+end
+
+post '/message' do
+  # If there's an attached image, download it
+  image = download_file params[:MediaUrl0] if params[:NumMedia].to_i >= 1
+
+  make_note note_store, 'From SMS', params[:Body], image, params[:MediaContentType0], "From Evernote-Twilio"
+end
+
+post '/voice' do
+  Twilio::TwiML::Response.new do |r|
+    r.Say 'Record a message to put in your default notebook.'
+    r.Record :transcribeCallback => "http://brent.ngrok.com/transcription"
+  end.text
+end
+
+post '/transcription' do
+  sound = download_file(params[:RecordingUrl])
+
+  make_note note_store, 'From voice call', params[:TranscriptionText], sound, "audio/mpeg", "From Evernote-Twilio"
 end
