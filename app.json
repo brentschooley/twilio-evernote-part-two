@@ -1,6 +1,6 @@
 {
-  "name": "TwilioEvernotePartOne",
-  "description": "Generate notes in Evernote from text messages using Twilio SMS",
+  "name": "TwilioEvernotePartTwo",
+  "description": "Generate notes in Evernote from SMS, MMS and voice using Twilio",
   "keywords": [
     "ruby",
     "sinatra",
@@ -8,7 +8,7 @@
     "twilio"
   ],
   "addons": [],
-  "repository": "https://github.com/brentschooley/twilio-evernote-part-one",
+  "repository": "https://github.com/brentschooley/twilio-evernote-part-two",
   "env": {
     "LANG": "en_US.UTF-8",
     "RACK_ENV": "production",

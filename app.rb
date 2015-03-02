@@ -2,7 +2,6 @@ require 'sinatra'
 require 'twilio-ruby'
 require 'evernote_oauth'
 require 'open-uri'
-require 'openssl'
 require 'pp'
 
 def dev_token
@@ -82,24 +81,24 @@ def create_note(new_note)
 end
 
 def download_file(file_url)
-  File.open('tempfile', 'w+b') do |fo|
-    fo.write open(file_url).read
-    fo.read
-  end
+  # Read content of file into memory and return it
+  open(file_url).read
 end
 
 post '/message' do
   # If there's an attached image, download it
-  image = download_file params[:MediaUrl0] if params[:NumMedia].to_i >= 1
+  image = download_file(params[:MediaUrl0]) if params[:NumMedia].to_i >= 1
 
   make_note note_store, 'From SMS', params[:Body], image, params[:MediaContentType0], "From Evernote-Twilio"
 end
 
 post '/voice' do
+  content_type :xml
+
   Twilio::TwiML::Response.new do |r|
     r.Say 'Record a message to put in your default notebook.'
     r.Record :transcribeCallback => "http://brent.ngrok.com/transcription"
-  end.text
+  end.to_xml
 end
 
 post '/transcription' do
