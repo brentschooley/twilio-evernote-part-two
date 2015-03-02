@@ -97,7 +97,7 @@ post '/voice' do
 
   Twilio::TwiML::Response.new do |r|
     r.Say 'Record a message to put in your default notebook.'
-    r.Record :transcribeCallback => "http://brent.ngrok.com/transcription"
+    r.Record :transcribeCallback => "http://brent.ngrok.com/transcription", :playBeep => "true"
   end.to_xml
 end
 
