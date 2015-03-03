@@ -87,7 +87,7 @@ end
 
 post '/message' do
   # If there's an attached image, download it
-  image = download_file(params[:MediaUrl0]) if params[:NumMedia].to_i >= 1
+  image = download_file(params[:MediaUrl0]) if params[:NumMedia].to_i > 0
 
   make_note note_store, 'From SMS', params[:Body], image, params[:MediaContentType0], "From Evernote-Twilio"
 end
@@ -97,7 +97,7 @@ post '/voice' do
 
   Twilio::TwiML::Response.new do |r|
     r.Say 'Record a message to put in your default notebook.'
-    r.Record :transcribeCallback => "http://brent.ngrok.com/transcription", :playBeep => "true"
+    r.Record(transcribeCallback: "http://brent.ngrok.com/transcription", playBeep: "true")
   end.to_xml
 end
 
